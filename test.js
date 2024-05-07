@@ -1,5 +1,5 @@
 // DataAssetsForm.js
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import "./DataAssetsForm.css"; // Import your CSS file
 
 const DataAssetsForm = () => {
@@ -170,8 +170,11 @@ const DataAssetsForm = () => {
   const [dataAssets, setDataAssets] = useState([
     {
       id: 1,
+      data_asset_title: "",
+      unique_id: "",
       description: "",
       usage: "business",
+      tags: [],
       origin: "",
       owner: "",
       quantity: "very-few",
@@ -186,6 +189,8 @@ const DataAssetsForm = () => {
   const [technicalAssets, setTechnicalAssets] = useState([
     {
       id: 1,
+      title: "",
+      unique_id: "",
       description: "",
       type: "process",
       usage: "business",
@@ -236,8 +241,11 @@ const DataAssetsForm = () => {
           prevDataAssets.length > 0
             ? prevDataAssets[prevDataAssets.length - 1].id + 1
             : prevDataAssets.length + 1,
+        data_asset_title: "",
+        unique_id: "",
         description: "",
         usage: "business",
+        tags: [],
         origin: "",
         owner: "",
         quantity: "very-few",
@@ -270,6 +278,13 @@ const DataAssetsForm = () => {
       setShowYamlOutput(true);
     }
   };
+  const textAreaRef = useRef(null);
+  const handleCopyToClipboard = () => {
+    if (textAreaRef.current) {
+      textAreaRef.current.select();
+      document.execCommand("copy");
+    }
+  };
   const handleSave = () => {
     const yamlOutput = generateYaml();
     setYamlOutput(yamlOutput);
@@ -284,34 +299,276 @@ const DataAssetsForm = () => {
 
   const generateYaml = () => {
     let yamlString = "";
+    yamlString += "threagile_version: 1.0.0\n";
+    yamlString += "title: Threat Modeling Test\n";
+    const today = new Date();
+    const formattedDate = `${today.getFullYear()}-${(today.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
+
+    // Define the data structure
+    const data = {
+      date: formattedDate,
+      author: {
+        name: "Test Test",
+        homepage: "www.test.com",
+      },
+      management_summary_comment: `Just some <b>more</b> custom summary possible here...`,
+      business_criticality: "important",
+      business_overview: {
+        description: "Some more <i>demo text</i> here and even images...",
+        images: [],
+      },
+      technical_overview: {
+        description: "Some more demo text</i> here and even images...",
+        images: [],
+      },
+      questions: {
+        "Some question without an answer?": "",
+        "Some question with an answer?": `Some answer`,
+      },
+      abuse_cases: {
+        "Some Abuse Case": `Some Description`,
+      },
+      security_requirements: {
+        "Some Security Requirement": `Some Description`,
+      },
+      tags_available: [
+        "aws",
+        "aws:apigateway",
+        "aws:dynamodb",
+        "aws:ebs",
+        "aws:ec2",
+        "aws:iam",
+        "aws:lambda",
+        "aws:rds",
+        "aws:s3",
+        "aws:sqs",
+        "aws:vpc",
+        "azure",
+        "docker",
+        "gcp",
+        "git",
+        "kubernetes",
+        "nexus",
+        "ocp",
+        "openshift",
+        "tomcat",
+        "some-tag",
+        "some-other-tag",
+      ],
+    };
+
+    // Convert data to YAML format
+    for (const [key, value] of Object.entries(data)) {
+      yamlString += `${key}:\n`;
+      if (typeof value === "object" && !Array.isArray(value)) {
+        for (const [innerKey, innerValue] of Object.entries(value)) {
+          yamlString += `  ${innerKey}: ${innerValue}\n`;
+        }
+      } else if (Array.isArray(value)) {
+        yamlString += value.map((tag) => `  - ${tag}`).join("\n") + "\n";
+      } else {
+        yamlString += `  ${value}\n`;
+      }
+    }
+    yamlString += "data_assets:\n";
+    dataAssets.forEach((asset, index) => {
+      yamlString += `  ${asset.data_asset_title}:\n`;
+      yamlString += `      id: ${asset.unique_id}\n`;
+      yamlString += `      description: ${asset.description}\n`;
+      yamlString += `      usage: ${asset.usage}\n`;
+      yamlString += `      tags: ${asset.tags.join(", ")}\n`;
+      yamlString += `      owner: ${asset.owner}\n`;
+      yamlString += `      quantity: ${asset.quantity}\n`;
+      yamlString += `      confidentiality: ${asset.confidentiality}\n`;
+      yamlString += `      integrity: ${asset.integrity}\n`;
+      yamlString += `      availability: ${asset.availability}\n`;
+      yamlString += `      justification_cia_rating: ${asset.justificationCia}\n`;
+    });
+    yamlString += "technical_assets:\n";
+    technicalAssets.forEach((asset, index) => {
+      yamlString += `  ${asset.title}:\n`;
+      yamlString += `    id: ${asset.unique_id}\n`;
+      yamlString += `    description: ${asset.description}\n`;
+      yamlString += `    type: ${asset.type}\n`;
+      yamlString += `    usage: ${asset.usage}\n`;
+      yamlString += `    used_as_client_by_human: ${asset.used_as_client_by_human}\n`;
+      yamlString += `    out_of_scope: ${asset.out_of_scope}\n`;
+      yamlString += `    justification_out_of_scope: ${asset.justification_out_of_scope}\n`;
+      yamlString += `    size: ${asset.size}\n`;
+      yamlString += `    technology: ${asset.technology}\n`;
+      yamlString += `    tags:\n`;
+      asset.tags.forEach((tag) => {
+        yamlString += `      - ${tag}\n`; // Add each tag in a nested list
+      });
+      yamlString += `    internet: ${asset.internet}\n`;
+      yamlString += `    machine: ${asset.machine}\n`;
+      yamlString += `    encryption: ${asset.encryption}\n`;
+      yamlString += `    owner: ${asset.owner}\n`;
+      yamlString += `    confidentiality: ${asset.confidentiality}\n`;
+      yamlString += `    integrity: ${asset.integrity}\n`;
+      yamlString += `    availability: ${asset.availability}\n`;
+      yamlString += `    justification_cia_rating: ${asset.justification_cia_rating}\n`;
+      yamlString += `    multi_tenant: ${asset.multi_tenant}\n`;
+      yamlString += `    redundant: ${asset.redundant}\n`;
+      yamlString += `    custom_developed_parts: ${asset.custom_developed_parts}\n`;
+      yamlString += `    data_assets_processed:\n`;
+
+      yamlString += `      - ${asset.data_assets_processed}\n`; // Add each processed data asset in a nested list
+
+      yamlString += `    data_assets_stored:\n`;
+
+      yamlString += `      - ${asset.data_assets_stored}\n`; // Add each stored data asset in a nested list
+
+      yamlString += `    data_formats_accepted:\n`;
+
+      yamlString += `      - ${asset.data_formats_accepted}\n`; // Add each accepted format in a nested list
+
+      yamlString += `    communication_links:\n`;
+      Object.entries(asset.communication_links).forEach(([key, value]) => {
+        yamlString += `      ${key}:\n`;
+        yamlString += `        target: ${value.target}\n`;
+        yamlString += `        description: ${value.description}\n`;
+        yamlString += `        protocol: ${value.protocol}\n`;
+        yamlString += `        authentication: ${value.authentication}\n`;
+        yamlString += `        authorization: ${value.authorization}\n`;
+        yamlString += `        tags:\n`;
+        value.tags.forEach((tag) => {
+          yamlString += `          - ${tag}\n`; // Add each tag in a nested list
+        });
+        yamlString += `        vpn: ${value.vpn}\n`;
+        yamlString += `        ip_filtered: ${value.ip_filtered}\n`;
+        yamlString += `        readonly: ${value.readonly}\n`;
+        yamlString += `        usage: ${value.usage}\n`;
+        yamlString += `        data_assets_sent:\n`;
+        value.data_assets_sent.forEach((dataAsset) => {
+          yamlString += `          - ${dataAsset}\n`; // Add each sent data asset in a nested list
+        });
+        yamlString += `        data_assets_received:\n`;
+        value.data_assets_received.forEach((dataAsset) => {
+          yamlString += `          - ${dataAsset}\n`; // Add each received data asset in a nested list
+        });
+      });
+    });
+    yamlString += "trust_boundaries:\n";
+    trustBoundaries.forEach((runtime, index) => {
+      yamlString += `  ${runtime.name}:\n`;
+      yamlString += `    id: ${runtime.id}\n`;
+      yamlString += `    description: ${runtime.description}\n`;
+      yamlString += `    type: ${runtime.type}\n`;
+      yamlString += `    tags:\n`;
+      runtime.tags.forEach((tag) => {
+        yamlString += `      - ${tag}\n`; // Add each tag in a nested list
+      });
+      yamlString += `    technical_assets_running:\n`;
+      if (runtime.technical_assets_inside.length === 0) {
+        yamlString += `      \n`; // Placeholder for empty array
+      } else {
+        runtime.technical_assets_inside.forEach((asset) => {
+          yamlString += `      - ${asset}\n`;
+        });
+      }
+      yamlString += `    trust_boundaries_nested:\n`;
+      if (runtime.trust_boundaries_nested.length === 0) {
+        yamlString += `      \n`; // Placeholder for empty array
+      } else {
+        runtime.trust_boundaries_nested.forEach((boundary) => {
+          yamlString += `      - ${boundary}\n`;
+        });
+      }
+    });
 
     // Convert shared runtimes to YAML
-    yamlString += "Shared Runtimes:\n";
+    yamlString += "shared_runtimes:\n";
     sharedRuntimes.forEach((runtime, index) => {
       yamlString += `  ${runtime.name}:\n`;
       yamlString += `      id: ${runtime.id}\n`;
       yamlString += `      description: ${runtime.description}\n`;
       yamlString += `      tags: ${runtime.tags.join(", ")}\n`;
       yamlString += `      technical_assets_running:\n`;
-      if (runtime.technical_assets_running.length === 0) {
-        yamlString += `        []\n`; // Placeholder for empty array
+      if (runtime.technical_assets_inside.length === 0) {
+        yamlString += `        \n`; // Placeholder for empty array
       } else {
-        runtime.technical_assets_running.forEach((asset) => {
+        runtime.technical_assets_inside.forEach((asset) => {
           yamlString += `        - ${asset}\n`;
         });
       }
     });
 
-    // Convert trust boundaries to YAML
-    yamlString += "\nTrust Boundaries:\n";
-    formData.trustBoundaries.forEach((boundary, index) => {
-      yamlString += `  - ID: ${boundary.id}\n`;
-      yamlString += `    Description: ${boundary.description}\n`;
-      // Add other fields as needed
-    });
-
     // Add other form data from steps 1 to 4 as needed
+    const data1 = {
+      individual_risk_categories: {
+        "Some Individual Risk Example": {
+          id: "something-strange",
+          description: "Some text describing the risk category...",
+          impact: "Some text describing the impact...",
+          asvs: "V0 - Something Strange",
+          cheat_sheet: "https://example.com",
+          action: "Some text describing the action...",
+          mitigation: "Some text describing the mitigation...",
+          check: "Check if XYZ...",
+          function: "business-side",
+          stride: "repudiation",
+          detection_logic: "Some text describing the detection logic...",
+          risk_assessment: "Some text describing the risk assessment...",
+          false_positives:
+            "Some text describing the most common types of false positives...",
+          model_failure_possible_reason: false,
+          cwe: 693,
+          risks_identified: {
+            "<b>Example Individual Risk</b> at <b>Some Technical Asset</b>": {
+              severity: "critical",
+              exploitation_likelihood: "likely",
+              exploitation_impact: "medium",
+              data_breach_probability: "probable",
+              data_breach_technical_assets: ["some-component"],
+              most_relevant_data_asset: "",
+              most_relevant_technical_asset: "some-component",
+              most_relevant_communication_link: "",
+              most_relevant_trust_boundary: "",
+              most_relevant_shared_runtime: "",
+            },
+          },
+        },
+      },
+      risk_tracking: {
+        "unencrypted-asset@some-component": {
+          status: "accepted",
+          justification: "Risk accepted as tolerable",
+          ticket: "XYZ-1234",
+          date: "2020-01-04",
+          checked_by: "John Doe",
+        },
+      },
+    };
 
+    // Convert data to YAML format
+
+    for (const [key, value] of Object.entries(data1)) {
+      yamlString += `${key}:\n`;
+      if (typeof value === "object") {
+        for (const [innerKey, innerValue] of Object.entries(value)) {
+          yamlString += `  ${innerKey}:\n`;
+          if (typeof innerValue === "object") {
+            for (const [subInnerKey, subInnerValue] of Object.entries(
+              innerValue
+            )) {
+              if (Array.isArray(subInnerValue)) {
+                yamlString += `    ${subInnerKey}:\n`;
+                subInnerValue.forEach((item) => {
+                  yamlString += `      - ${item}\n`;
+                });
+              } else {
+                yamlString += `    ${subInnerKey}: ${subInnerValue}\n`;
+              }
+            }
+          } else {
+            yamlString += `  ${innerValue}\n`;
+          }
+        }
+      }
+    }
     return yamlString;
   };
   const handleBackToDataAssets = () => {
@@ -340,6 +597,8 @@ const DataAssetsForm = () => {
           prevTechnicalAssets.length > 0
             ? prevTechnicalAssets[prevTechnicalAssets.length - 1].id + 1
             : prevTechnicalAssets.length + 1,
+        title: "",
+        unique_id: "",
         description: "",
         type: "process",
         usage: "business",
@@ -446,6 +705,28 @@ const DataAssetsForm = () => {
                 <h3>{`Technical Asset Information - ID: ${asset.id}`}</h3>
                 <form>
                   <div className="form-row">
+                    <label>Technical Asset Name:</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={asset.title}
+                      onChange={(e) => {
+                        const newTitle = e.target.value;
+                        const newUniqueId = `${newTitle} - ${asset.id}`;
+                        handleChangeTechnicalAsset(index, e);
+                        handleChangeTechnicalAsset(index, {
+                          ...e,
+                          target: {
+                            ...e.target,
+                            name: "unique_id",
+                            value: newUniqueId,
+                          },
+                        });
+                      }}
+                      required
+                    />
+                  </div>
+                  <div className="form-row">
                     <label>Description:</label>
                     <textarea
                       name="description"
@@ -479,24 +760,53 @@ const DataAssetsForm = () => {
                       <option value="devops">DevOps</option>
                     </select>
                   </div>
-                  <div className="form-row">
-                    <label>Used as Client by Human:</label>
-                    <input
-                      type="checkbox"
-                      name="used_as_client_by_human"
-                      checked={asset.used_as_client_by_human}
-                      onChange={(e) => handleChangeTechnicalAsset(index, e)}
-                    />
+                  <div
+                    className="form-row"
+                    style={{ display: "flex", justifyContent: "center" }}
+                  >
+                    <div className="checkbox-group">
+                      <div className="checkbox-item">
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="used_as_client_by_human"
+                            checked={asset.used_as_client_by_human}
+                            onChange={(e) =>
+                              handleChangeTechnicalAsset(index, e)
+                            }
+                          />
+                          Used as Client by Human
+                        </label>
+                      </div>
+                      <div className="checkbox-item">
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="out_of_scope"
+                            checked={asset.out_of_scope}
+                            onChange={(e) =>
+                              handleChangeTechnicalAsset(index, e)
+                            }
+                          />
+                          Out of Scope
+                        </label>
+                      </div>
+                      <div className="checkbox-item">
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="internet"
+                            checked={asset.internet}
+                            onChange={(e) =>
+                              handleChangeTechnicalAsset(index, e)
+                            }
+                          />
+                          Internet
+                        </label>
+                      </div>
+                    </div>
                   </div>
-                  <div className="form-row">
-                    <label>Out of Scope:</label>
-                    <input
-                      type="checkbox"
-                      name="out_of_scope"
-                      checked={asset.out_of_scope}
-                      onChange={(e) => handleChangeTechnicalAsset(index, e)}
-                    />
-                  </div>
+
                   <div className="form-row">
                     <label>Justification Out of Scope:</label>
                     <textarea
@@ -547,15 +857,7 @@ const DataAssetsForm = () => {
                       }
                     />
                   </div>
-                  <div className="form-row">
-                    <label>Internet:</label>
-                    <input
-                      type="checkbox"
-                      name="internet"
-                      checked={asset.internet}
-                      onChange={(e) => handleChangeTechnicalAsset(index, e)}
-                    />
-                  </div>
+
                   <div className="form-row">
                     <label>Machine:</label>
                     <select
@@ -656,45 +958,65 @@ const DataAssetsForm = () => {
                       onChange={(e) => handleChangeTechnicalAsset(index, e)}
                     />
                   </div>
-                  <div className="form-row">
-                    <label>Multi-tenant:</label>
-                    <input
-                      type="checkbox"
-                      name="multi_tenant"
-                      checked={asset.multi_tenant}
-                      onChange={(e) => handleChangeTechnicalAsset(index, e)}
-                    />
+                  <div
+                    className="form-row"
+                    style={{ display: "flex", justifyContent: "center" }}
+                  >
+                    <div className="checkbox-group">
+                      <div className="checkbox-item">
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="multi_tenant"
+                            checked={asset.multi_tenant}
+                            onChange={(e) =>
+                              handleChangeTechnicalAsset(index, e)
+                            }
+                          />
+                          Multi-tenant
+                        </label>
+                      </div>
+                      <div className="checkbox-item">
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="redundant"
+                            checked={asset.redundant}
+                            onChange={(e) =>
+                              handleChangeTechnicalAsset(index, e)
+                            }
+                          />
+                          Redundant
+                        </label>
+                      </div>
+                      <div className="checkbox-item">
+                        <label>
+                          <input
+                            type="checkbox"
+                            name="custom_developed_parts"
+                            checked={asset.custom_developed_parts}
+                            onChange={(e) =>
+                              handleChangeTechnicalAsset(index, e)
+                            }
+                          />
+                          Custom Developed Parts
+                        </label>
+                      </div>
+                    </div>
                   </div>
-                  <div className="form-row">
-                    <label>Redundant:</label>
-                    <input
-                      type="checkbox"
-                      name="redundant"
-                      checked={asset.redundant}
-                      onChange={(e) => handleChangeTechnicalAsset(index, e)}
-                    />
-                  </div>
-                  <div className="form-row">
-                    <label>Custom Developed Parts:</label>
-                    <input
-                      type="checkbox"
-                      name="custom_developed_parts"
-                      checked={asset.custom_developed_parts}
-                      onChange={(e) => handleChangeTechnicalAsset(index, e)}
-                    />
-                  </div>
+
                   <div className="form-row">
                     <label>Data Assets Processed:</label>
                     <select
+                      multiple
                       name="data_assets_processed"
                       value={asset.data_assets_processed}
                       onChange={(e) => handleChangeTechnicalAsset(index, e)}
                       required
                     >
-                      <option value="">Select Data Asset</option>
                       {dataAssets.map((dataAsset) => (
                         <option key={dataAsset.id} value={dataAsset.id}>
-                          {dataAsset.description}
+                          {dataAsset.unique_id}
                         </option>
                       ))}
                     </select>
@@ -707,10 +1029,9 @@ const DataAssetsForm = () => {
                       onChange={(e) => handleChangeTechnicalAsset(index, e)}
                       required
                     >
-                      <option value="">Select Data Asset</option>
                       {dataAssets.map((dataAsset) => (
                         <option key={dataAsset.id} value={dataAsset.id}>
-                          {dataAsset.description}
+                          {dataAsset.unique_id}
                         </option>
                       ))}
                     </select>
@@ -851,7 +1172,7 @@ const DataAssetsForm = () => {
                     >
                       {technicalAssets.map((asset) => (
                         <option key={asset.id} value={asset.id}>
-                          {asset.description}
+                          {asset.unique_id}
                         </option>
                       ))}
                     </select>
@@ -968,8 +1289,8 @@ const DataAssetsForm = () => {
                       }
                     >
                       {technicalAssets.map((asset) => (
-                        <option key={asset.id} value={asset.id}>
-                          {asset.description}
+                        <option key={asset.unique_id} value={asset.unique_id}>
+                          {asset.unique_id}
                         </option>
                       ))}
                     </select>
@@ -1016,18 +1337,83 @@ const DataAssetsForm = () => {
           </div>
         </div>
       ) : showYamlOutput ? (
-        <div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
           {/* Display the YAML output here */}
-          <pre>{yamlOutput}</pre>
-          <button
-            type="button"
-            className="next-btn"
-            onClick={() => {
-              handleBackToDataAssets();
+          <textarea
+            id="yamlOutput"
+            value={yamlOutput}
+            ref={textAreaRef}
+            readOnly
+            rows={15} // Increased the number of rows
+            cols={50}
+            style={{
+              width: "100%", // Adjusted width to 80% of the container
+              textAlign: "left",
+              fontFamily: "monospace",
+              whiteSpace: "pre-wrap",
+              resize: "none",
+              marginBottom: "20px", // Added margin below the textarea
+
+              resize: "none", // Disable resize by user
+              height: "70vh",
             }}
-          >
-            Back to Form
-          </button>
+          />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <button
+              type="button"
+              className="next-btn"
+              onClick={() => {
+                handleBackToDataAssets();
+              }}
+              style={{
+                padding: "8px 16px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                backgroundColor: "transparent",
+                color: "#343a40",
+                border: "2px solid #343a40",
+                borderRadius: "5px",
+                cursor: "pointer",
+                transition:
+                  "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease",
+                marginRight: "8px",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = "#343a40";
+                e.target.style.color = "#fff"; /* White color on hover */
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "transparent";
+                e.target.style.color = "#343a40"; /* Dark color on leave */
+              }}
+            >
+              Back
+            </button>
+            <button
+              onClick={handleCopyToClipboard}
+              style={{
+                padding: "8px 16px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                backgroundColor: "#eaeaea",
+                color: "#343a40",
+                border: "1px solid #ccc",
+                borderRadius: "3px",
+                cursor: "pointer",
+                transition:
+                  "background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease",
+                marginRight: "8px",
+              }}
+            >
+              Copy to Clipboard
+            </button>
+          </div>
         </div>
       ) : (
         <div>
@@ -1037,6 +1423,28 @@ const DataAssetsForm = () => {
               <div className="card-content">
                 <h3>{`Data Asset Information - ID: ${asset.id}`}</h3>
                 <form>
+                  <div className="form-row">
+                    <label>Data Asset Name:</label>
+                    <input
+                      type="text"
+                      name="data_asset_title"
+                      value={asset.data_asset_title}
+                      onChange={(e) => {
+                        const newTitle = e.target.value;
+                        const newUniqueId = `${newTitle} - ${asset.id}`;
+                        handleChangeDataAsset(index, e);
+                        handleChangeDataAsset(index, {
+                          ...e,
+                          target: {
+                            ...e.target,
+                            name: "unique_id",
+                            value: newUniqueId,
+                          },
+                        });
+                      }}
+                      required
+                    />
+                  </div>
                   <div className="form-row">
                     <label>Description:</label>
                     <textarea
@@ -1057,6 +1465,22 @@ const DataAssetsForm = () => {
                       <option value="business">Business</option>
                       <option value="devops">DevOps</option>
                     </select>
+                  </div>
+                  <div className="form-row">
+                    <label>Tags:</label>
+                    <input
+                      type="text"
+                      name="tags"
+                      value={asset.tags.join(", ")}
+                      onChange={(e) =>
+                        handleChange(index, {
+                          target: {
+                            name: "tags",
+                            value: e.target.value.split(", "),
+                          },
+                        })
+                      }
+                    />
                   </div>
                   <div className="form-row">
                     <label>Origin:</label>
