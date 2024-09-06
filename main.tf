@@ -109,7 +109,25 @@ resource "azurerm_kubernetes_cluster" "example" {
     network_plugin = "azure"
   }
 }
+resource "azurerm_resource_group" "example" {
+  name     = "example-resources"
+  location = "East US"
+}
 
+resource "azurerm_redis_cache" "example" {
+  name                = "example-redis-cache"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  capacity            = 1
+  family              = "C"
+  sku                 = "Basic"
+  
+  enable_non_ssl_port = true
+
+  tags = {
+    environment = "Testing"
+  }
+}
 # Application Gateway
 resource "azurerm_application_gateway" "example" {
   name                = "${var.windows_dns_prefix}-agw"
