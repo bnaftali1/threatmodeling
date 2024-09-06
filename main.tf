@@ -38,32 +38,14 @@ module "network" {
 
 # Key Vault
 resource "azurerm_key_vault" "example" {
-  name                        = "${var.windows_dns_prefix}-kv"
-  location                    = "${var.location}"
-  resource_group_name          = "${var.windows_dns_prefix}-rc"
-  tenant_id                   = data.azurerm_client_config.current.tenant_id
-  sku_name                    = "standard"
-
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-
-    key_permissions = [
-      "get",
-      "list",
-    ]
-
-    secret_permissions = [
-      "get",
-      "list",
-    ]
-
-    certificate_permissions = [
-      "get",
-      "list",
-    ]
-  }
+  name                = "examplekeyvault"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  sku_name             = "standard"
+  tenant_id           = data.azurerm_client_config.example.tenant_id
+  object_id           = data.azurerm_client_config.example.object_id
 }
+
 resource "azurerm_key_vault_key" "example" {
   name         = "example-key"
   key_vault_id = azurerm_key_vault.example.id
